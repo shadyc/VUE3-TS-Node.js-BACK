@@ -1,0 +1,91 @@
+{
+    "data": [
+        {
+            "id": 101,
+            "authName": "商品管理",
+            "path": null,
+            "children": [
+                {
+                    "id": 104,
+                    "authName": "商品列表",
+                    "path": "list",
+                    "children": []
+                },
+                {
+                    "id": 105,
+                    "authName": "分类参数",
+                    "path": "data",
+                    "children": []
+                },
+                {
+                    "id": 106,
+                    "authName": "商品分类",
+                    "path": "part",
+                    "children": []
+                }
+            ]
+        },
+        {
+            "id": 102,
+            "authName": "订单管理",
+            "path": null,
+            "children": [
+                {
+                    "id": 121,
+                    "authName": "订单修改",
+                    "path": "orderChange",
+                    "children": []
+                }
+            ]
+        },
+        {
+            "id": 103,
+            "authName": "权限管理",
+            "path": null,
+            "children": [
+                {
+                    "id": 131,
+                    "authName": "角色列表",
+                    "path": "roles",
+                    "children": []
+                },
+                {
+                    "id": 132,
+                    "authName": "权限列表",
+                    "path": "rights",
+                    "children": []
+                }
+            ]
+        },
+        {
+            "id": 125,
+            "authName": "用户管理",
+            "path": null,
+            "children": [
+                {
+                    "id": 110,
+                    "authName": "用户列表",
+                    "path": "users",
+                    "children": []
+                }
+            ]
+        },
+        {
+            "id": 145,
+            "authName": "数据统计",
+            "path": null,
+            "children": [
+                {
+                    "id": 146,
+                    "authName": "数据修改",
+                    "path": "dataModidy",
+                    "children": []
+                }
+            ]
+        }
+    ],
+    "meta": {
+        "msg": "获取菜单列表成功",
+        "status": 200
+    }
+}
