@@ -71,13 +71,13 @@ app.post('/user', function(req,res){
 //获取用户列表接口
 app.post('/usersList',function(req,res){
     let query = req.body.query
-    let pagenum = req.body.pagenum
-    let pagesize = req.body.pagesize
+    let pagenum = Number(req.body.params.pagenum)
+    let pagesize = Number(req.body.params.pagesize)
     let start=(pagenum-1)*pagesize
     let total = null
-    console.log(req.body)
-    // const sql = `select * from user limit ${start},${pagesize}`;
-    const sql = 'select * from user'
+    console.log(req.body.params.pagenum)
+    const sql = `select * from user limit ${start},${pagesize}`;
+    // const sql = 'select * from user'
     const sql1 = 'select count(*) total from user'
     connection.query(sql1,function(err,result){
         console.log(result)
@@ -91,11 +91,10 @@ app.post('/usersList',function(req,res){
         // 返回的数据需要转换成JSON格式
         let meta = {status: 200, msg: '获取用户列表成功'}
         let data = result
-        console.log(data)
-        console.log(typeof data[0].mg_state)
         return res.json({data,meta,total}); 
     }); 
 })
+
 
 //菜单请求接口
 app.get('/menus',function(err,res){
@@ -115,6 +114,41 @@ app.get('/menus',function(err,res){
         }
     });
 
+})
+
+//添加用户接口
+app.post('/addUser',function(req,res){
+    console.log(username,pwd,email,tel,id)
+    const sql = `insert into user(name,email,tel,pwd,id,role) values('${username}','${email}','${tel}','${pwd}','${id}','${role}')`
+    connection.query(sql,function(err,result){
+        if(err){
+            return res.json({ status: 0, msg: '登录失败'})
+        }
+        let meta = {status: 200, msg: '获取用户列表成功'}
+        let obj = {
+            data: result,
+            meta: meta
+        }
+        return res.json(obj)
+    })
+})
+
+//删除用户接口
+app.post('/deleteUser',function(req,res){
+    let username = req.body.name
+    const sql = 'delete from user where name = ?'
+    connection.query(sql,username,function(err,result){
+        console.log(result,err)
+        if(err){
+            return res.json({ status: 0, msg: '删除用户失败'})
+        }
+        let meta = {status: 200, mgs: '删除用户成功'}
+        let obj = {
+            data: result,
+            meta: meta
+        }
+        return res.json(obj)
+    })
 })
 
 var server = app.listen(3000, '127.0.0.1', function () {
