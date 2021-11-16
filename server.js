@@ -118,9 +118,11 @@ app.get('/menus',function(err,res){
 
 //添加用户接口
 app.post('/addUser',function(req,res){
+    let {username,pwd,email,tel,id,role} = req.body.params
     console.log(username,pwd,email,tel,id)
     const sql = `insert into user(name,email,tel,pwd,id,role) values('${username}','${email}','${tel}','${pwd}','${id}','${role}')`
     connection.query(sql,function(err,result){
+        console.log(result,err)
         if(err){
             return res.json({ status: 0, msg: '登录失败'})
         }
