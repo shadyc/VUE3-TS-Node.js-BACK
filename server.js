@@ -53,7 +53,8 @@ app.post('/user', function(req,res){
         console.log(err,result)
         console.log(username)
         if(!result.length){
-            return res.json({ status: 0, msg: '登录失败' })
+            let meta = {status: 0, msg: '登录失败'}
+            return res.json(meta)
         }else{
             // [ RowDataPacket { password: '123', username: 'admin', id: 1 } ]
             if(result[0].pwd==password){
@@ -70,13 +71,12 @@ app.post('/user', function(req,res){
 
 //获取用户列表接口
 app.post('/usersList',function(req,res){
-    let query = req.body.query
+    let query = req.body.params.query
     let pagenum = Number(req.body.params.pagenum)
     let pagesize = Number(req.body.params.pagesize)
     let start=(pagenum-1)*pagesize
     let total = null
-    console.log(req.body.params.pagenum)
-    const sql = `select * from user limit ${start},${pagesize}`;
+    const sql = `select * from user where name like '%${query}%' limit ${start},${pagesize}`;
     // const sql = 'select * from user'
     const sql1 = 'select count(*) total from user'
     connection.query(sql1,function(err,result){
@@ -85,7 +85,8 @@ app.post('/usersList',function(req,res){
     }); 
     connection.query(sql,function(err,result){
         if(err){
-            return res.json({ status: 0, msg: '登录失败' })
+            let meta = {status: 0, msg: '登录失败'}
+            return res.json(meta)
         }
         // result内放的就是返回的数据，res是api传数据
         // 返回的数据需要转换成JSON格式
@@ -93,6 +94,24 @@ app.post('/usersList',function(req,res){
         let data = result
         return res.json({data,meta,total}); 
     }); 
+})
+
+//查询用户信息接口
+app.post('/selectUser',function(req,res){
+   let id = req.body.id
+   const sql = `select * from user where id = ${id}`
+   connection.query(sql,(err,result) => {
+       if(err){
+           let meta = {status: 0, msg: '查询用户信息失败'}
+           return res.json(meta)
+       }
+       let meta = {status: 200, msg: '查询用户信息成功'}
+       let obj = {
+           data: result,
+           meta: meta
+       }
+       return res.json(obj)
+   })
 })
 
 
@@ -124,9 +143,29 @@ app.post('/addUser',function(req,res){
     connection.query(sql,function(err,result){
         console.log(result,err)
         if(err){
-            return res.json({ status: 0, msg: '登录失败'})
+            let meta = {status: 0, msg: '获取用户列表失败'}
+            return res.json(meta)
         }
         let meta = {status: 200, msg: '获取用户列表成功'}
+        let obj = {
+            data: result,
+            meta: meta
+        }
+        return res.json(obj)
+    })
+})
+
+//修改用户信息接口
+app.post('/updateUser',function(req,res){
+    let {username,email,tel} = req.body.params
+    const sql = `update user set email = "${email}",tel = "${tel}" where name = "${username}"`
+    connection.query(sql,function(err,result){
+        console.log(result,err)
+        if(err){
+            let meta = {status: 0, msg: '修改用户信息失败'}
+            return res.json(meta)
+        }
+        let meta = {status: 200, msg: '修改用户信息成功'}
         let obj = {
             data: result,
             meta: meta
