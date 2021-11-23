@@ -9,7 +9,13 @@
                     "id": 104,
                     "authName": "商品列表",
                     "path": "list",
-                    "children": []
+                    "children": [
+                        {
+                            "id": 105,
+                            "authName": "添加商品",
+                            "path": null
+                        }
+                    ]
                 },
                 {
                     "id": 105,

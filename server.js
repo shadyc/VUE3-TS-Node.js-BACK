@@ -119,7 +119,7 @@ app.post('/selectUser',function(req,res){
 app.get('/menus',function(err,res){
         //console.log(req.body); //获取请求参数
 	
-        var file = path.join(__dirname, './public/dataMock/leftMenu.json'); //文件路径，__dirname为当前运行js文件的目录
+        var file = path.join(__dirname, './public/dataMock/leftMenu-tree.json'); //文件路径，__dirname为当前运行js文件的目录
         //var file = 'f:\\nodejs\\data\\test.json'; //也可以用这种方式指定路径
 	
 	//读取json文件
@@ -134,6 +134,46 @@ app.get('/menus',function(err,res){
     });
 
 })
+
+//权限列表请求接口
+app.get('/limits',function(err,res){
+    //console.log(req.body); //获取请求参数
+
+    var file = path.join(__dirname, './public/dataMock/leftMenu-list.json'); //文件路径，__dirname为当前运行js文件的目录
+    //var file = 'f:\\nodejs\\data\\test.json'; //也可以用这种方式指定路径
+
+//读取json文件
+fs.readFile(file, 'utf-8', function(err, data) {
+    console.log(data)
+
+    if (err) {
+        res.send('文件读取失败');
+    } else {
+        res.send(data);
+    }
+});
+})
+
+//角色列表请求接口
+app.get('/roles',function(err,res){
+    //console.log(req.body); //获取请求参数
+
+    var file = path.join(__dirname, './public/dataMock/roles.json'); //文件路径，__dirname为当前运行js文件的目录
+    //var file = 'f:\\nodejs\\data\\test.json'; //也可以用这种方式指定路径
+
+//读取json文件
+fs.readFile(file, 'utf-8', function(err, data) {
+    console.log(data)
+
+    if (err) {
+        res.send('文件读取失败');
+    } else {
+        res.send(data);
+    }
+});
+})
+
+
 
 //添加用户接口
 app.post('/addUser',function(req,res){

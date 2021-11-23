@@ -1,0 +1,93 @@
+{
+    "data": [
+        {
+            "id": 101,
+            "authName": "商品管理",
+            "level": "0",
+            "pid": 0,
+            "path": "goods"
+        },
+        {
+            "id": 102,
+            "authName": "订单管理",
+            "level": "0",
+            "pid": 0,
+            "path": "orders"
+        },
+        {
+            "id": 103,
+            "authName": "权限管理",
+            "level": "0",
+            "pid": 0,
+            "path": "rights"
+        },
+        {
+            "id": 125,
+            "authName": "用户管理",
+            "level": "0",
+            "pid": 0,
+            "path": "users"
+        },
+        {
+            "id": 145,
+            "authName": "数据统计",
+            "level": "0",
+            "pid": 0,
+            "path": "dataModidy"
+        },
+        {
+            "id": 104,
+            "authName": "商品列表",
+            "level": "1",
+            "path": "list"
+        },
+        {
+            "id": 105,
+            "authName": "分类参数",
+            "level": "1",
+            "path": "data"
+        },
+        {
+            "id": 106,
+            "authName": "商品分类",
+            "level": "1",
+            "path": "part"
+        },
+        {
+            "id": 121,
+            "authName": "订单修改",
+            "level": "1",
+            "path": "orderChange"
+        },
+     
+        {
+            "id": 131,
+            "authName": "角色列表",
+            "level": "1",
+            "path": "roles"
+        },
+        {
+            "id": 132,
+            "authName": "权限列表",
+            "level": "1",
+            "path": "rights"
+        },
+     
+        {
+            "id": 110,
+            "authName": "用户列表",
+            "level": "1",
+            "path": "users"
+        },
+        {
+            "id": 146,
+            "authName": "数据修改",
+            "level": "1",
+            "path": "dataModidy"
+        }
+    ],
+    "meta": {
+        "msg": "获取菜单列表成功",
+        "status": 200
+    }
+}
