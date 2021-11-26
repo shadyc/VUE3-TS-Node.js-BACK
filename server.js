@@ -29,22 +29,6 @@ app.all('*', function (req, res, next) {
     next();
 });
 
-// 这里就是主要要修改的地方，其实也就一行
-// 把 address 改成你自己定的地址，就是连接访问的那个地址
-// app.get('/user',function(req,res){
-//     const sql = 'select * from user'; // 写你需要的sql代码
-//     connection.query(sql,function(err,result){
-//         if(err){
-//             console.log('[SELECT ERROR] - ', err.message);
-//             return;
-//         }
-//         // result内放的就是返回的数据，res是api传数据
-//         // 返回的数据需要转换成JSON格式
-//         console.log(result)
-//         res.json(result); 
-//     }); 
-// })  
-
 //登录请求接口
 app.post('/user', function (req, res) {
     let username = req.body.name
@@ -137,42 +121,87 @@ app.post('/selectUser', function (req, res) {
 // })
 
 //权限列表请求接口
-app.get('/limits', function (err, res) {
-    //console.log(req.body); //获取请求参数
+// app.get('/limits', function (err, res) {
+//     //console.log(req.body); //获取请求参数
 
-    var file = path.join(__dirname, './public/dataMock/leftMenu-list.json'); //文件路径，__dirname为当前运行js文件的目录
-    //var file = 'f:\\nodejs\\data\\test.json'; //也可以用这种方式指定路径
+//     var file = path.join(__dirname, './public/dataMock/leftMenu-list.json'); //文件路径，__dirname为当前运行js文件的目录
+//     //var file = 'f:\\nodejs\\data\\test.json'; //也可以用这种方式指定路径
 
-    //读取json文件
-    fs.readFile(file, 'utf-8', function (err, data) {
-        console.log(data)
+//     //读取json文件
+//     fs.readFile(file, 'utf-8', function (err, data) {
+//         console.log(data)
 
+//         if (err) {
+//             res.send('失败');
+//         } else {
+//             res.send(data);
+//         }
+//     });
+// })
+
+//权限列表请求接口
+app.get('/limits', function (req, res) {
+    const sql = 'select * from menu'
+    connection.query(sql, function (err, result) {
+        console.log(result, err)
         if (err) {
-            res.send('文件读取失败');
-        } else {
-            res.send(data);
+            return res.json({ status: 0, msg: '查询权限列表失败' })
         }
-    });
+        let meta = { status: 200, mgs: '查询权限列表成功' }
+        let obj = {
+            data: result,
+            meta: meta
+        }
+        return res.json(obj)
+    })
 })
 
 //角色列表请求接口
-app.get('/roles', function (err, res) {
-    //console.log(req.body); //获取请求参数
-
-    var file = path.join(__dirname, './public/dataMock/roles.json'); //文件路径，__dirname为当前运行js文件的目录
-    //var file = 'f:\\nodejs\\data\\test.json'; //也可以用这种方式指定路径
-
-    //读取json文件
-    fs.readFile(file, 'utf-8', function (err, data) {
-        console.log(data)
-
-        if (err) {
-            res.send('文件读取失败');
-        } else {
-            res.send(data);
+app.get('/roles', (req,res) => {
+    const sql = 'select * from role';
+    connection.query(sql,(err,result) => {
+        let info = result
+        let len = result.length
+        for(let i = 0; i < len; i++){
+            let roleId = result[i].roleId
+            const sql1 = `select * from menu where id in (select distinct menu_id from role_menu where role_id = ${roleId})`
+            connection.query(sql1, (err,result) => {
+                if(err){
+                    let meta = { status: 0, msg: '获取角色列表失败' }
+                    return res.json(meta)
+                }
+                info[i].children = result
+                if(i == len-1){
+                    let meta = { status: 200, msg: '获取角色列表成功' }
+                    let obj = {
+                        data: info,
+                        meta: meta
+                    }
+                    return res.json(obj);
+                }
+            })
         }
-    });
+    })
 })
+
+//角色列表请求接口
+// app.get('/roles', function (err, res) {
+//     //console.log(req.body); //获取请求参数
+
+//     var file = path.join(__dirname, './public/dataMock/roles.json'); //文件路径，__dirname为当前运行js文件的目录
+//     //var file = 'f:\\nodejs\\data\\test.json'; //也可以用这种方式指定路径
+
+//     //读取json文件
+//     fs.readFile(file, 'utf-8', function (err, data) {
+//         console.log(data)
+
+//         if (err) {
+//             res.send('文件读取失败');
+//         } else {
+//             res.send(data);
+//         }
+//     });
+// })
 
 
 
@@ -188,6 +217,42 @@ app.post('/addUser', function (req, res) {
             return res.json(meta)
         }
         let meta = { status: 200, msg: '获取用户列表成功' }
+        let obj = {
+            data: result,
+            meta: meta
+        }
+        return res.json(obj)
+    })
+})
+
+//修改前查询指定修改角色信息接口
+app.post('/editRole', function (req, res) {
+    let roleId = req.body.roleId
+    const sql = `select * from role where roleId = ${roleId}`
+    connection.query(sql, function (err, result) {
+        if (err) {
+            let meta = { status: 0, msg: '查询角色信息失败' }
+            return res.json(meta)
+        }
+        let meta = { status: 200, msg: '查询角色信息成功' }
+        let obj = {
+            data: result,
+            meta: meta
+        }
+        return res.json(obj)
+    })
+})
+//修改角色信息接口
+app.post('/editRoleSubmit', function (req, res) {
+    let {roleName, roleDesc} = req.body.params
+    const sql = `update role set roleDesc = "${roleDesc}" where roleName = "${roleName}"`
+    connection.query(sql, function (err, result) {
+        console.log(err,result)
+        if (err) {
+            let meta = { status: 0, msg: '修改角色信息失败' }
+            return res.json(meta)
+        }
+        let meta = { status: 200, msg: '修改角色信息成功' }
         let obj = {
             data: result,
             meta: meta
@@ -215,30 +280,43 @@ app.post('/updateUser', function (req, res) {
     })
 })
 
-//菜单查询接口
+//菜单请求接口
 app.get('/menus', function (req, res) {
     let total = null
     let len = null
-    const sql = 'select * from list where pid = 0';
+    const sql = 'select * from menu where pid = 0';
+    //第一次查询，查找pid为0的一级菜单
     connection.query(sql, function (err, result) {
         total = result
         len = result.length
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < len; i++) {
             let pid = total[i].id;
-            const sql1 = `select * from list where pid = ${pid}`;
-            connection.query(sql1, function (err, result) {
-                if (err) {
-                    let meta = { status: 0, msg: '登录失败' }
-                    return res.json(meta)
-                }
+            //第二次查询，查找pid为一级菜单id的二级菜单
+            const sql1 = `select * from menu where pid = ${pid}`;
+            connection.query(sql1, (err, result) => {
+                let totalChild = result
+                let lenChild = result.length
                 total[i].children = result
-                if(i==(len-1)){
-                    let meta = { status: 200, msg: '获取菜单列表成功' }
-                    let obj = {
-                        data: total,
-                        meta: meta
-                    }
-                    return res.json(obj);
+                for(let j = 0;j < lenChild; j++){
+                    let cid = totalChild[j].id
+                    //第三次查询，查找pid为二级菜单id的三级菜单
+                    const sql2 = `select * from menu where pid = ${cid}`;
+                    connection.query(sql2,(err,result) => {
+                        if (err) {
+                            let meta = { status: 0, msg: '获取菜单列表失败' }
+                            return res.json(meta)
+                        }
+                        total[i].children[j].children = result
+                        //判断，当最后一次循环时，进行数据返回操作
+                        if(i==(len-1)){
+                            let meta = { status: 200, msg: '获取菜单列表成功' }
+                            let obj = {
+                                data: total,
+                                meta: meta
+                            }
+                            return res.json(obj);
+                        }
+                    })
                 }
             });
         }
