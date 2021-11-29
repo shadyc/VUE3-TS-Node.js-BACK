@@ -143,7 +143,6 @@ app.post('/selectUser', function (req, res) {
 app.get('/limits', function (req, res) {
     const sql = 'select * from menu'
     connection.query(sql, function (err, result) {
-        console.log(result, err)
         if (err) {
             return res.json({ status: 0, msg: '查询权限列表失败' })
         }
@@ -158,26 +157,93 @@ app.get('/limits', function (req, res) {
 
 //角色列表请求接口
 app.get('/roles', (req,res) => {
+    // 第一次查询，查找所有角色
     const sql = 'select * from role';
     connection.query(sql,(err,result) => {
         let info = result
         let len = result.length
         for(let i = 0; i < len; i++){
             let roleId = result[i].roleId
+            // 第二次查询，根据角色id对应的menu_id来查找对应角色下的菜单信息
             const sql1 = `select * from menu where id in (select distinct menu_id from role_menu where role_id = ${roleId})`
             connection.query(sql1, (err,result) => {
-                if(err){
-                    let meta = { status: 0, msg: '获取角色列表失败' }
-                    return res.json(meta)
-                }
+                let child = result
+                let lenChild = result.length
                 info[i].children = result
-                if(i == len-1){
-                    let meta = { status: 200, msg: '获取角色列表成功' }
-                    let obj = {
-                        data: info,
-                        meta: meta
-                    }
-                    return res.json(obj);
+                for(let j =0;j < lenChild; j++){
+                    let cid = child[j].id
+                    //第三次查询，查找pid为一级菜单id的二级菜单
+                    const sql2 = `select * from menu where pid = ${cid}`;
+                    connection.query(sql2,(err,result) => {
+                        if(err){
+                            let meta = { status: 0, msg: '获取角色列表失败' }
+                            return res.json(meta)
+                        }
+                        console.log(i)
+                        console.log(len)
+                        info[i].children[j].children = result
+                        if(i == (len-1)){
+                            let meta = { status: 200, msg: '获取角色列表成功' }
+                            let obj = {
+                                data: info,
+                                meta: meta
+                            }
+                            return res.json(obj);
+                        }
+                    })
+                }
+            })
+        }
+    })
+})
+
+//角色列表请求接口
+app.get('/roles1', (req,res) => {
+    // 第一次查询，查找所有角色
+    const sql = 'select * from role';
+    connection.query(sql,(err,result) => {
+        let info = result
+        let len = result.length
+        for(let i = 0; i < len; i++){
+            let roleId = result[i].roleId
+            // 第二次查询，根据角色id对应的menu_id来查找对应角色下的菜单信息
+            const sql1 = `select * from menu where id in (select distinct menu_id from role_menu where role_id = ${roleId})`
+            connection.query(sql1, (err,result) => {
+                let child = result
+                let lenChild = result.length
+                info[i].children = result
+                for(let j =0;j < lenChild; j++){
+                    let cid = child[j].id
+                    //第三次查询，查找pid为一级菜单id的二级菜单
+                    const sql2 = `select * from menu where pid = ${cid}`;
+                    connection.query(sql2,(err,result) => {
+                        let childitem = result
+                        let lenitem = result.length
+                        info[i].children[j].children = result
+                        for(let n=0; n< lenitem; n++){
+                            console.log(childitem[n])
+                            let nid = childitem[n].id
+                            //第四次查询，查找pid为二级菜单id的三级菜单
+                            const sql3 = `select * from menu where pid = ${nid}`;
+                            connection.query(sql3,(err,result) => {
+                                if(err){
+                                    let meta = { status: 0, msg: '获取角色列表失败' }
+                                    return res.json(meta)
+                                }
+                                info[i].children[j].children[n].children = result
+                                console.log(i)
+                                console.log(len)
+                                if(i == (len-1)){
+                                    let meta = { status: 200, msg: '获取角色列表成功' }
+                                    let obj = {
+                                        data: info,
+                                        meta: meta
+                                    }
+                                    return res.json(obj);
+                                }
+                            })
+                        }
+                    })
                 }
             })
         }
