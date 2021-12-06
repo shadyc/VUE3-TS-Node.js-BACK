@@ -156,7 +156,7 @@ app.get('/limits', function (req, res) {
 })
 
 //角色列表请求接口
-app.get('/roles', (req,res) => {
+app.get('/roles1', (req,res) => {
     // 第一次查询，查找所有角色
     const sql = 'select * from role';
     connection.query(sql,(err,result) => {
@@ -198,7 +198,7 @@ app.get('/roles', (req,res) => {
 })
 
 //角色列表请求接口
-app.get('/roles1', (req,res) => {
+app.get('/roles2', (req,res) => {
     // 第一次查询，查找所有角色
     const sql = 'select * from role';
     connection.query(sql,(err,result) => {
@@ -221,8 +221,8 @@ app.get('/roles1', (req,res) => {
                         let lenitem = result.length
                         info[i].children[j].children = result
                         for(let n=0; n< lenitem; n++){
-                            console.log(childitem[n])
                             let nid = childitem[n].id
+                            console.log("这是id" + nid)
                             //第四次查询，查找pid为二级菜单id的三级菜单
                             const sql3 = `select * from menu where pid = ${nid}`;
                             connection.query(sql3,(err,result) => {
@@ -231,8 +231,7 @@ app.get('/roles1', (req,res) => {
                                     return res.json(meta)
                                 }
                                 info[i].children[j].children[n].children = result
-                                console.log(i)
-                                console.log(len)
+                                console.log("长度" + len,lenChild,lenitem + "   变量" + i,j,n)
                                 if(i == (len-1)){
                                     let meta = { status: 200, msg: '获取角色列表成功' }
                                     let obj = {
@@ -343,6 +342,65 @@ app.post('/updateUser', function (req, res) {
             meta: meta
         }
         return res.json(obj)
+    })
+})
+
+//角色列表请求接口
+app.get('/roles', (req,res) => {
+    let sog = 0
+    // 第一次查询，查找所有角色
+    const sql9 = 'select * from role';
+    connection.query(sql9, (err,result) => {
+        let total = result
+        let len = result.length
+        for(let i = 0; i< len; i++){
+            let roleId = result[i].roleId
+            const sql1 = `select * from menu where id in (select distinct menu_id from role_menu where role_id = ${roleId})`
+            connection.query(sql1, (err,result) => {
+                total[i].children = result
+                let child = result
+                let len1 = result.length
+                for (let j = 0; j < len1; j++) {
+                    let pid = child[j].id;
+                    //第二次查询，查找pid为一级菜单id的二级菜单
+                    const sql2 = `select  distinct * from menu where pid = ${pid}`;
+                    connection.query(sql2, (err, result) => {
+                        total[i].children[j].children = result
+                        let totalChild = result
+                        let lenChild = result.length
+                        // let flag = 0
+                        // if(i == (len-1)){
+                        //     flag = 1
+                        // }
+                        for(let p = 0;p < lenChild; p++){
+                            let cid = totalChild[p].id
+                            //第三次查询，查找pid为二级菜单id的三级菜单
+                            const sql3 = `select  distinct * from menu where pid = ${cid}`;
+                            connection.query(sql3,(err,result) => {
+                                if (err) {
+                                    let meta = { status: 0, msg: '获取菜单列表失败' }
+                                    return res.json(meta)
+                                }
+                                total[i].children[j].children[p].children = result
+                                //判断，当最后一次循环时，进行数据返回操作
+                                // console.log(flag)
+                                // if(!flag){
+                                //     sog++
+                                // }
+                                if(i == (len - 1)){
+                                    let meta = { status: 200, msg: '获取菜单列表成功' }
+                                    let obj = {
+                                        data: total,
+                                        meta: meta
+                                    }
+                                    return res.json(obj);
+                                }
+                            })
+                        }
+                    });
+                }
+            })
+        }
     })
 })
 
