@@ -81,6 +81,59 @@ app.post('/usersList', function (req, res) {
     });
 })
 
+//商品查询请求接口
+app.post('/categories', function (req, res) {
+    let total = null
+    let len = null
+    let pageTotal = null
+    let pagenum = Number(req.body.params.pagenum)
+    let pagesize = Number(req.body.params.pagesize)
+    let start = (pagenum - 1) * pagesize
+    const sql0 = 'select count(*) pageTotal from goods'
+    connection.query(sql0, function (err, result) {
+        console.log(result)
+        pageTotal = result[0]
+    });
+    const sql = `select * from goods where cat_pid = 0 limit ${start},${pagesize}`;
+    //第一次查询，查找cat_pid为0的一级菜单
+    connection.query(sql, function (err, result) {
+        total = result
+        len = result.length
+        for (let i = 0; i < len; i++) {
+            let pid = total[i].cat_id;
+            //第二次查询，查找cat_pid为一级菜单cat_id的二级菜单
+            const sql1 = `select * from goods where cat_pid = ${pid}`;
+            connection.query(sql1, (err, result) => {
+                let totalChild = result
+                let lenChild = result.length
+                total[i].children = result
+                for(let j = 0;j < lenChild; j++){
+                    let cid = totalChild[j].cat_id
+                    //第三次查询，查找cat_pid为二级菜单cat_id的三级菜单
+                    const sql2 = `select * from goods where cat_pid = ${cid}`;
+                    connection.query(sql2,(err,result) => {
+                        if (err) {
+                            let meta = { status: 0, msg: '获取菜单列表失败' }
+                            return res.json(meta)
+                        }
+                        total[i].children[j].children = result
+                        //判断，当最后一次循环时，进行数据返回操作
+                        if(i==(len-1)){
+                            let meta = { status: 200, msg: '获取菜单列表成功' }
+                            let obj = {
+                                data: total,
+                                total: pageTotal,
+                                meta: meta
+                            }
+                            return res.json(obj);
+                        }
+                    })
+                }
+            });
+        }
+    });
+})
+
 //查询用户信息接口
 app.post('/selectUser', function (req, res) {
     let id = req.body.id
