@@ -1,4 +1,5 @@
 const express = require('express');
+const uuid = require('node-uuid')
 const app = express();
 const mysql = require('mysql');
 const jwt = require('jsonwebtoken');
@@ -84,22 +85,50 @@ app.post('/usersList', function (req, res) {
 //商品添加分类接口
 app.post('/addcategories', function (req, res) {
     let { cat_name, cat_pid, cat_level } = req.body
-    console.log(cat_name,cat_pid,cat_level)
-    // console.log(username, pwd, email, tel, id)
-    // const sql = `insert into user(name,email,tel,pwd,id,role) values('${username}','${email}','${tel}','${pwd}','${id}','${role}')`
-    // connection.query(sql, function (err, result) {
-    //     console.log(result, err)
-    //     if (err) {
-    //         let meta = { status: 0, msg: '获取用户列表失败' }
-    //         return res.json(meta)
-    //     }
-    //     let meta = { status: 200, msg: '获取用户列表成功' }
-    //     let obj = {
-    //         data: result,
-    //         meta: meta
-    //     }
-    //     return res.json(obj)
-    // })
+    console.log(cat_name, cat_pid, cat_level)
+    // console.log(uuid.v1())
+    // console.log(uuid.v4())
+    let randomId = 208
+    let randomPid = 330
+    let catDeleted = 'false'
+    let maxCatId = 0
+    if(cat_level == 0) {
+        const sql = 'select max(cat_id) maxCatId from goods where cat_level=0'
+        connection.query(sql, function (err, result) {
+                   maxCatId = result[0].maxCatId + 1
+                   const sql1 = `insert into goods(cat_id, cat_pid, cat_name, cat_level, cat_deleted) values('${maxCatId}', 0 ,'${cat_name}', 0 ,'${catDeleted}')`
+                   connection.query(sql1, function (err, result) {
+                       console.log(err,result)
+                       if (err) {
+                           let meta = { status: 0, msg: '增加商品分类失败' }
+                           return res.json(meta)
+                       }
+                       let meta = { status: 200, msg: '增加商品分类成功' }
+                       let obj = {
+                           data: result,
+                           meta: meta
+                       }
+                       return res.json(obj)
+                   })
+                })
+    }
+    // else if(cat_level == 1) {
+    //     const sql2 = `insert into goods(cat_id, cat_pdi, cat_name, cat_level, cat_deleted) values('${randomId}', 0 ,'${cat_name}', 0 ,'${catDeleted}')`
+    //     randomId++
+    //     connection.query(sql2, function (err, result) {
+    //         console.log(result, err)
+    //         if (err) {
+    //             let meta = { status: 0, msg: '增加商品分类失败' }
+    //             return res.json(meta)
+    //         }
+    //         let meta = { status: 200, msg: '增加商品分类成功' }
+    //         let obj = {
+    //             data: result,
+    //             meta: meta
+    //         }
+    //         return res.json(obj)
+    //     })
+    // }
 })
 
 //商品查询请求接口
@@ -112,7 +141,6 @@ app.post('/categories', function (req, res) {
     let pagesize = Number(req.body.params.pagesize)
     let start = (pagenum - 1) * pagesize
     let type = req.body.params.type
-    console.log(type)
     // 当传入type为2时，只查一二级菜单
     if (type == 2) {
         const sqlt = 'select * from goods where cat_pid = 0';
