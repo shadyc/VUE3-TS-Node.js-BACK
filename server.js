@@ -85,15 +85,10 @@ app.post('/usersList', function (req, res) {
 //商品添加分类接口
 app.post('/addcategories', function (req, res) {
     let { cat_name, cat_pid, cat_level } = req.body
-    console.log(cat_name, cat_pid, cat_level)
-    // console.log(uuid.v1())
-    // console.log(uuid.v4())
-    let randomId = 208
-    let randomPid = 330
     let catDeleted = 'false'
     let maxCatId = 0
     if(cat_level == 0) {
-        const sql = 'select max(cat_id) maxCatId from goods where cat_level=0'
+        const sql = 'select max(cat_id) maxCatId from goods where cat_level = 0'
         connection.query(sql, function (err, result) {
                    maxCatId = result[0].maxCatId + 1
                    const sql1 = `insert into goods(cat_id, cat_pid, cat_name, cat_level, cat_deleted) values('${maxCatId}', 0 ,'${cat_name}', 0 ,'${catDeleted}')`
@@ -170,26 +165,23 @@ app.post('/categories', function (req, res) {
             }
         });
     }
-    else {
-        // 注意：由于goods商品表区分为一二三级菜单，在前端分页时不查询总条数，而是查询一级菜单的总条数，所以这时候传给前端的总条数应为一级菜单总条数
-        const sql0 = 'select count(*) pageTotal from goods where cat_pid = 0'
-        connection.query(sql0, function (err, result) {
-            // pageTotal为一级菜单总条数
-            pageTotal = result[0]
-        });
-        const sql = `select * from goods where cat_pid = 0 limit ${start},${pagesize}`;
+    // 当传入type为3时，查询一二三级菜单
+    else if(type == 3 && Object.keys(req.body.params).length == 1) {
+        let total1 = null
+        let len1 = null
+        const sqlt = 'select * from goods where cat_pid = 0';
         //第一次查询，查找cat_pid为0的一级菜单
-        connection.query(sql, function (err, result) {
-            total = result
-            len = result.length
-            for (let i = 0; i < len; i++) {
-                let pid = total[i].cat_id;
+        connection.query(sqlt, function (err, result) {
+            total1 = result
+            len1 = result.length
+            for (let i = 0; i < len1; i++) {
+                let pid = total1[i].cat_id;
                 //第二次查询，查找cat_pid为一级菜单cat_id的二级菜单
                 const sql1 = `select * from goods where cat_pid = ${pid}`;
                 connection.query(sql1, (err, result) => {
                     let totalChild = result
                     let lenChild = result.length
-                    total[i].children = result
+                    total1[i].children = result
                     for (let j = 0; j < lenChild; j++) {
                         let cid = totalChild[j].cat_id
                         //第三次查询，查找cat_pid为二级菜单cat_id的三级菜单
@@ -199,9 +191,9 @@ app.post('/categories', function (req, res) {
                                 let meta = { status: 0, msg: '获取菜单列表失败' }
                                 return res.json(meta)
                             }
-                            total[i].children[j].children = result
+                            total1[i].children[j].children = result
                             //判断，当最后一次循环时，进行数据返回操作
-                            if (i == (len - 1)) {
+                            if (i == (len1 - 1)) {
                                 // 在最外层定义一个sum，用于判断是否等于result.length
                                 // 这里的result.length指三级菜单的长度，如果遍历完，则表示循环遍历三级菜单结束，可以调用res.json返回前端值
                                 sum++
@@ -209,7 +201,59 @@ app.post('/categories', function (req, res) {
                             if (sum == result.length) {
                                 let meta = { status: 200, msg: '获取菜单列表成功' }
                                 obj = {
-                                    data: total,
+                                    data: total1,
+                                    meta: meta
+                                }
+                                return res.json(obj);
+                            }
+                        })
+                    }
+                });
+            }
+        });
+    }
+    else {
+        let total2 = null
+        let len2 = null
+        // 注意：由于goods商品表区分为一二三级菜单，在前端分页时不查询总条数，而是查询一级菜单的总条数，所以这时候传给前端的总条数应为一级菜单总条数
+        const sql0 = 'select count(*) pageTotal from goods where cat_pid = 0'
+        connection.query(sql0, function (err, result) {
+            // pageTotal为一级菜单总条数
+            pageTotal = result[0]
+        });
+        const sql = `select * from goods where cat_pid = 0 limit ${start},${pagesize}`;
+        //第一次查询，查找cat_pid为0的一级菜单
+        connection.query(sql, function (err, result) {
+            total2 = result
+            len2 = result.length
+            for (let i = 0; i < len2; i++) {
+                let pid = total2[i].cat_id;
+                //第二次查询，查找cat_pid为一级菜单cat_id的二级菜单
+                const sql1 = `select * from goods where cat_pid = ${pid}`;
+                connection.query(sql1, (err, result) => {
+                    let totalChild = result
+                    let lenChild = result.length
+                    total2[i].children = result
+                    for (let j = 0; j < lenChild; j++) {
+                        let cid = totalChild[j].cat_id
+                        //第三次查询，查找cat_pid为二级菜单cat_id的三级菜单
+                        const sql2 = `select * from goods where cat_pid = ${cid}`;
+                        connection.query(sql2, (err, result) => {
+                            if (err) {
+                                let meta = { status: 0, msg: '获取菜单列表失败' }
+                                return res.json(meta)
+                            }
+                            total2[i].children[j].children = result
+                            //判断，当最后一次循环时，进行数据返回操作
+                            if (i == (len2 - 1)) {
+                                // 在最外层定义一个sum，用于判断是否等于result.length
+                                // 这里的result.length指三级菜单的长度，如果遍历完，则表示循环遍历三级菜单结束，可以调用res.json返回前端值
+                                sum++
+                            }
+                            if (sum == result.length) {
+                                let meta = { status: 200, msg: '获取菜单列表成功' }
+                                obj = {
+                                    data: total2,
                                     total: pageTotal,
                                     meta: meta
                                 }
@@ -221,6 +265,27 @@ app.post('/categories', function (req, res) {
             }
         });
     }
+})
+
+app.post('/attributes', function(req, res) {
+    let cat_id = req.body.params.cat_id
+    let attr_sel = req.body.params.attr_sel
+    console.log(cat_id, attr_sel)
+    console.log(typeof attr_sel)
+    const sql = `select * from attributes where cat_id = ${cat_id} and attr_sel = '${attr_sel}'`;
+    connection.query(sql, function (err, result) {
+        console.log(err,result)
+        if (err) {
+            let meta = { status: 0, msg: '查询分类参数失败!' }
+            return res.json(meta)
+        }
+        let meta = { status: 200, msg: '查询分类参数成功!' }
+        let obj = {
+            data: result,
+            meta: meta
+        }
+        return res.json(obj)
+    });
 })
 
 //查询用户信息接口
